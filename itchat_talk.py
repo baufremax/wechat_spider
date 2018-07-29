@@ -82,7 +82,7 @@ def simple_reply(msg):
 if __name__ == '__main__':
 	movie_dir = path.join(path.dirname(__file__), 'movies.xlsx')
 	load_xls(movie_dir, links)
-	# for x in links:
+	# for x in links.keys():
 		# print(x + ' ' + links[x])
 	itchat.auto_login(hotReload=True)
 	douban_object = douban_crawl.DoubanSpider()
