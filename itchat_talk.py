@@ -15,6 +15,7 @@ import re
 from xlrd import open_workbook
 from os import path
 
+# load info of movies from given file
 def load_xls(path, links):
 	wb = open_workbook(path)
 	for s in wb.sheets():
@@ -26,6 +27,7 @@ links = {}
 @itchat.msg_register(itchat.content.TEXT, itchat.content.PICTURE)
 def simple_reply(msg):
 	global movie_info_all
+	# 接受用户任意包含“电影”的字样，跳转到指定页面等待
 	if u'电影' in msg['Text']:
 	    douban_object.browser_hotopen()
 	    douban_object.cvt_cmd_to_ctgy_url(msg['Text'])
@@ -33,16 +35,19 @@ def simple_reply(msg):
 	    itchat.send_msg('----请选择一种类型----\n' + movie_category_option, msg['FromUserName'])
 	else:
 		find_info = False
+		# 接受用户的电影类型输入，并执行概况信息爬取，然后反馈给用户
 		for category in douban_crawl.movie_category:
 			if category in msg['Text']:
 				find_info = True
 				itchat.send_msg('正在查找' + category + '电影...', msg['FromUserName'])
 				del douban_crawl.command_cache[:]
 				douban_crawl.command_cache.append(category)
+				 # 进行概况信息爬取，并将所有排列列表扩展到一起
 				movie_info_all = douban_object.browser_action_general_info(category)
 				itchat.send_msg('----按热度排序----\n' + '\n' + '\n'.join(douban_crawl.movie_info_hot), msg['FromUserName'])
 				itchat.send_msg('----按时间排序----\n' + '\n' + '\n'.join(douban_crawl.movie_info_time), msg['FromUserName'])
 				itchat.send_msg('----按评论排序----\n' + '\n' + '\n'.join(douban_crawl.movie_info_comment), msg['FromUserName'])
+		# 接受用户的电影名的选择，并进行指定电影的详细字段爬取，然后返回给用户
 		if not find_info:
 			search_num = 0
 			for x in movie_info_all:
@@ -65,7 +70,8 @@ def simple_reply(msg):
 					html_result = douban_object.download_detail_info_html(url_result)
 					douban_object.parse_detail_info(html_result)
 					movie_link = links[movie_name]
-					douban_crawl.movie_detail_info.append(movie_link)
+					douban_crawl.movie_detail_info.append("豆瓣链接： " + url_result)
+					douban_crawl.movie_detail_info.append("百度云资源： " + movie_link)
 					itchat.send_msg('\n\n'.join(douban_crawl.movie_detail_info), msg['FromUserName'])
 					break
 

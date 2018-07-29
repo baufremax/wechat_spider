@@ -185,7 +185,6 @@ class DoubanSpider(object):
         for x in soup.find_all('span', property='v:genre'):
             movie_type = movie_type + x.string.strip() + '/'
         for x in soup.find_all('span', property='v:initialReleaseDate'):
-            print(x)
             movie_date = movie_date + x.string.strip() + '/'
             movie_runtime = movie_runtime + soup.find('span', property='v:runtime').string.strip()
         for x in soup.find_all('span', class_='all hidden'):
