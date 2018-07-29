@@ -44,7 +44,7 @@ class DoubanSpider(object):
         :param command:
         :return:
         """
-        if '电影' in command:
+        if u'电影' in command:
             self.url_category = self.douban_url_base + 'explore'
 
     def browser_hotopen(self):

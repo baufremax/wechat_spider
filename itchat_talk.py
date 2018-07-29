@@ -11,49 +11,73 @@ Wechat auto reply movies info in real-time mode by crawling douban website
 """
 import itchat
 import douban_crawl
+import re
+from xlrd import open_workbook
+from os import path
 
+def load_xls(path, links):
+	wb = open_workbook(path)
+	for s in wb.sheets():
+		for row in range(s.nrows):
+			links[s.cell(row, 0).value] = s.cell(row,1).value
+
+links = {}
 
 @itchat.msg_register(itchat.content.TEXT, itchat.content.PICTURE)
 def simple_reply(msg):
-    global movie_info_all
-    if u'电影' in msg['Text']:
-        douban_object.browser_hotopen()
-        douban_object.cvt_cmd_to_ctgy_url(msg['Text'])
-        movie_category_option = ' '.join(douban_crawl.movie_category)
-        itchat.send_msg('----请选择一种类型----\n' + movie_category_option, msg['FromUserName'])
-
-    elif msg['Text'] in douban_crawl.movie_category:
-            itchat.send_msg('正在查找' + msg['Text'] + '电影...', msg['FromUserName'])
-            del douban_crawl.command_cache[:]
-            douban_crawl.command_cache.append(msg['Text'])
-            movie_info_all = douban_object.browser_action_general_info(msg['Text'])
-            itchat.send_msg('----按热度排序----\n' + '\n' + '\n'.join(douban_crawl.movie_info_hot), msg['FromUserName'])
-            itchat.send_msg('----按时间排序----\n' + '\n' + '\n'.join(douban_crawl.movie_info_time), msg['FromUserName'])
-            itchat.send_msg('----按评论排序----\n' + '\n' + '\n'.join(douban_crawl.movie_info_comment), msg['FromUserName'])
-
-    else:
-        search_num = 0
-        for x in movie_info_all:
-            if msg['Text'] in x:
-                itchat.send_msg('正在查找' + msg['Text'] + '...', msg['FromUserName'])
-                loc = movie_info_all.index(x)
-                if 0 <= loc < 10:
-                    search_num = 1
-                elif 10 <= loc < 20:
-                    search_num = 2
-                else:
-                    search_num = 3
-                break
-        url_result = douban_object.browser_action_detail_info(search_num, msg['Text'])
-        html_result = douban_object.download_detail_info_html(url_result)
-        douban_object.parse_detail_info(html_result)
-        itchat.send_msg('\n\n'.join(douban_crawl.movie_detail_info), msg['FromUserName'])
+	global movie_info_all
+	if u'电影' in msg['Text']:
+	    douban_object.browser_hotopen()
+	    douban_object.cvt_cmd_to_ctgy_url(msg['Text'])
+	    movie_category_option = ' '.join(douban_crawl.movie_category)
+	    itchat.send_msg('----请选择一种类型----\n' + movie_category_option, msg['FromUserName'])
+	else:
+		find_info = False
+		for category in douban_crawl.movie_category:
+			if category in msg['Text']:
+				find_info = True
+				itchat.send_msg('正在查找' + category + '电影...', msg['FromUserName'])
+				del douban_crawl.command_cache[:]
+				douban_crawl.command_cache.append(category)
+				movie_info_all = douban_object.browser_action_general_info(category)
+				itchat.send_msg('----按热度排序----\n' + '\n' + '\n'.join(douban_crawl.movie_info_hot), msg['FromUserName'])
+				itchat.send_msg('----按时间排序----\n' + '\n' + '\n'.join(douban_crawl.movie_info_time), msg['FromUserName'])
+				itchat.send_msg('----按评论排序----\n' + '\n' + '\n'.join(douban_crawl.movie_info_comment), msg['FromUserName'])
+		if not find_info:
+			search_num = 0
+			for x in movie_info_all:
+				# Get movie_name from format "10.电影名：9.7分"
+				movie_name = re.match(r'^\d*\.(\w+):', x)
+				if movie_name:
+					movie_name = movie_name.group(1)
+				else:
+					continue
+				if movie_name in msg['Text']:
+					itchat.send_msg('正在查找' + movie_name + '...', msg['FromUserName'])
+					loc = movie_info_all.index(x)
+					if 0 <= loc < 10:
+						search_num = 1
+					elif 10 <= loc < 20:
+						search_num = 2
+					else:
+						search_num = 3
+					url_result = douban_object.browser_action_detail_info(search_num, movie_name)
+					html_result = douban_object.download_detail_info_html(url_result)
+					douban_object.parse_detail_info(html_result)
+					movie_link = links[movie_name]
+					douban_crawl.movie_detail_info.append(movie_link)
+					itchat.send_msg('\n\n'.join(douban_crawl.movie_detail_info), msg['FromUserName'])
+					break
 
 
 if __name__ == '__main__':
-    itchat.auto_login(hotReload=True)
-    douban_object = douban_crawl.DoubanSpider()
-    movie_info_all = []
-    itchat.run()
+	movie_dir = path.join(path.dirname(__file__), 'movies.xlsx')
+	load_xls(movie_dir, links)
+	# for x in links:
+		# print(x + ' ' + links[x])
+	itchat.auto_login(hotReload=True)
+	douban_object = douban_crawl.DoubanSpider()
+	movie_info_all = []
+	itchat.run()
 
 
