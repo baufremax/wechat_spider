@@ -69,7 +69,10 @@ def simple_reply(msg):
 					url_result = douban_object.browser_action_detail_info(search_num, movie_name)
 					html_result = douban_object.download_detail_info_html(url_result)
 					douban_object.parse_detail_info(html_result)
-					movie_link = links[movie_name]
+					movie_link = ""
+					for x in links.keys():
+						if movie_name in x or x in movie_name:
+							movie_link = links[x]
 					douban_crawl.movie_detail_info.append("豆瓣链接： " + url_result)
 					douban_crawl.movie_detail_info.append("百度云资源： " + movie_link)
 					itchat.send_msg('\n\n'.join(douban_crawl.movie_detail_info), msg['FromUserName'])
