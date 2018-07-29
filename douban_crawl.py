@@ -169,18 +169,30 @@ class DoubanSpider(object):
         movie_type = '类型: '
         movie_date = '上映日期: '
         movie_runtime = '片长: '
+        movie_summary = '剧情简介： '
         soup = BeautifulSoup(html_result, 'lxml')
 
         movie_name = movie_name + soup.find('span', property='v:itemreviewed').string.strip()\
         + soup.find('span', class_='year').string.strip()
         director_name = director_name + soup.find('a', rel='v:directedBy').string.strip()
         for x in soup.find_all('a', rel='v:starring'):
-            actor_name_list = actor_name_list + x.string.strip() + '/'
+            # show no longer than 40 chars
+            if len(actor_name_list) < 40:
+                actor_name_list = actor_name_list + x.string.strip() + '/'
+            else:
+                actor_name_list += '...'
+                break
         for x in soup.find_all('span', property='v:genre'):
             movie_type = movie_type + x.string.strip() + '/'
         for x in soup.find_all('span', property='v:initialReleaseDate'):
+            print(x)
             movie_date = movie_date + x.string.strip() + '/'
             movie_runtime = movie_runtime + soup.find('span', property='v:runtime').string.strip()
+        for x in soup.find_all('span', class_='all hidden'):
+       	    if x:
+       	    	# Do not use x.string() because tag x contains more than one thing.
+       	    	movie_summary += x.text.strip()
+
 
         movie_detail_info.append(movie_name)
         movie_detail_info.append(director_name)
@@ -188,6 +200,7 @@ class DoubanSpider(object):
         movie_detail_info.append(movie_type)
         movie_detail_info.append(movie_date)
         movie_detail_info.append(movie_runtime)
+        movie_detail_info.append(movie_summary)
 
     @staticmethod
     def download_detail_info_html(url_target):
