@@ -33,7 +33,8 @@ class DoubanSpider(object):
     """
     def __init__(self):
         chrome_options = Options()
-        chrome_options.add_argument("--disable-infobars")
+        # No chrome browser pop up
+        chrome_options.add_argument("--headless")
         driver_path = path.join(path.dirname(__file__), 'chromedriver')
         self.driver = webdriver.Chrome(executable_path = driver_path, chrome_options=chrome_options)
         self.douban_url_base = 'https://movie.douban.com/'
