@@ -2,12 +2,15 @@
 """
 douban movies information download, parse
 """
+from os import path
+import ssl
 
 import urllib.request
 from bs4 import BeautifulSoup
 from time import sleep
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
+import lxml
 
 
 headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36'
@@ -31,7 +34,8 @@ class DoubanSpider(object):
     def __init__(self):
         chrome_options = Options()
         chrome_options.add_argument("--disable-infobars")
-        self.driver = webdriver.Chrome(executable_path = '/Users/wzy/Downloads/chromedriver', chrome_options=chrome_options)
+        driver_path = path.join(path.dirname(__file__), 'chromedriver')
+        self.driver = webdriver.Chrome(executable_path = driver_path, chrome_options=chrome_options)
         self.douban_url_base = 'https://movie.douban.com/'
         self.url_category = ''
         self.url_picture = ''
@@ -170,7 +174,7 @@ class DoubanSpider(object):
         movie_date = '上映日期: '
         movie_runtime = '片长: '
         movie_summary = '剧情简介： '
-        soup = BeautifulSoup(html_result, 'lxml')
+        soup = BeautifulSoup(html_result, 'html5lib')
 
         movie_name = movie_name + soup.find('span', property='v:itemreviewed').string.strip()\
         + soup.find('span', class_='year').string.strip()
@@ -209,7 +213,8 @@ class DoubanSpider(object):
         :return:
         """
         response = urllib.request.Request(url_target, headers=headers)
-        result = urllib.request.urlopen(response)
+        context = ssl._create_unverified_context()
+        result = urllib.request.urlopen(response, context=context)
         html = result.read().decode('utf-8')
         return html
 
