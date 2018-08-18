@@ -1,4 +1,4 @@
-# Wechat_MovieSpider_Master
+# Wechat_MovieSpider
 
 Wechat auto-replys movies information in real-time mode by crawling douban website
 
