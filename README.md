@@ -1,4 +1,4 @@
-# Wechat_MovieSpider
+# Wechat-Crawler
 
 A movie crawler with Python which can crawl info from Douban.com and send info back when user types in a keyword on WeChat.
 
